@@ -1,0 +1,24 @@
+---
+- name: Download Syncthing repository GPG key
+  get_url:
+    url: https://syncthing.net/release-key.gpg
+    dest: /usr/share/keyrings/syncthing-archive-keyring.gpg
+
+- name: Add Syncthing APT repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing stable"
+    filename: syncthing
+    state: present
+    update_cache: true
+
+- name: Install Syncthing
+  apt:
+    name: syncthing
+    state: present
+
+- name: "{{ syncthing_enable_service | ternary('Enable', 'Disable') }} syncthing systemd service for user {{ syncthing_user }}"
+  service:
+    name: syncthing@{{ syncthing_user }}
+    state: "{{ syncthing_enable_service | ternary('started', 'stopped') }}"
+    enabled: "{{ syncthing_enable_service }}"
+  when: syncthing_user
